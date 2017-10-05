@@ -32,6 +32,31 @@ double positionBonus(string position)
     for(int i=0;i<8;i++)
         result+=fieldBonus(position[bonus3[i]],1);
 
+
+    for(int i=0;i<8;i++)
+        result+=((position[i]=='c')? -1: 0);
+
+    for(int i=8;i<16;i++)
+        result+=((position[i]=='c')? -1: 5);
+
+    for(int i=16;i<24;i++)
+        result+=((position[i]=='c')? -2: 4);
+
+    for(int i=24;i<32;i++)
+        result+=((position[i]=='c')? -2: 3);
+
+    for(int i=32;i<40;i++)
+        result+=((position[i]=='c')? -3: 2);
+
+    for(int i=40;i<48;i++)
+        result+=((position[i]=='c')? -4: 2);
+
+    for(int i=48;i<56;i++)
+        result+=((position[i]=='c')? -5: 1);
+
+    for(int i=56;i<64;i++)
+        result+=((position[i]=='c')? 0: 1);
+
     return result;
 }
 
@@ -143,7 +168,7 @@ void findCapturesForMen(string position, int field, vector<int> menMoves)
     }
 }
 
-void checkDirection(string position, int field, int xDirection, int yDirection, char color, vector<int> kingMoves)
+void checkDirectionForCapture(string position, int field, int xDirection, int yDirection, char color, vector<int> kingMoves)
 {
     bool capture=0;
     int captureField,x,y;
@@ -161,7 +186,6 @@ void checkDirection(string position, int field, int xDirection, int yDirection, 
             {
                 capture=1;
                 captureField=field+i*(yDirection*8+xDirection);
-                cout<<captureField<<endl;
                 i++;
             }
 
@@ -190,7 +214,6 @@ void checkDirection(string position, int field, int xDirection, int yDirection, 
             {
                 capture=1;
                 captureField=field+i*(yDirection*8+xDirection);
-                cout<<captureField<<endl;
                 i++;
             }
 
@@ -213,13 +236,13 @@ void findCapturesForKing(string position,int field, vector<int> kingMoves)
 {
     kingMoves.push_back(field);
 
-    cout<<field<<" "<<endl;
+    /*cout<<field<<" "<<endl;
     for(int i=0;i<position.size();i++)
     {
         cout<<position[i];
         if((i+1)%8==0)
             cout<<endl;
-    }
+    }*/
 
     int x,y,captureField;
     char color=position[field];
@@ -227,10 +250,10 @@ void findCapturesForKing(string position,int field, vector<int> kingMoves)
     string newPosition;
 
 
-    checkDirection(position,field,-1,-1,color,kingMoves);
-    checkDirection(position,field,-1,+1,color,kingMoves);
-    checkDirection(position,field,+1,-1,color,kingMoves);
-    checkDirection(position,field,+1,+1,color,kingMoves);
+    checkDirectionForCapture(position,field,-1,-1,color,kingMoves);
+    checkDirectionForCapture(position,field,-1,+1,color,kingMoves);
+    checkDirectionForCapture(position,field,+1,-1,color,kingMoves);
+    checkDirectionForCapture(position,field,+1,+1,color,kingMoves);
 
     if(moves.size()==0 && kingMoves.size()!=0)
         moves.push_back(kingMoves);
@@ -246,21 +269,79 @@ void findCapturesForKing(string position,int field, vector<int> kingMoves)
         }
     }
 }
+
+void findCaptures(string position)
+{
+    for(int i=0;i<position.size();i++)
+    {
+        if(position[i]=='b' || position[i]=='c')
+            findCapturesForMen(position,i,vector<int>());
+
+        if(position[i]=='B' || position[i]=='C')
+            findCapturesForKing(position,i,vector<int>());
+    }
+}
+
+void findMovesForMen(string position)
+{
+    for(int i=0;i<position.size();i++)
+    {
+        int x,y;
+        x=i%8;
+        y=(i-x)/8;
+
+        if(position[i]=='c')
+        {
+            if(isLegal(x-1,y-1,position,1))
+                moves.push_back(vector<int>(i, i-9));
+
+            if(isLegal(x+1,y-1,position,1))
+                moves.push_back(vector<int>(i, i-7));
+        }
+
+        if(position[i]=='b')
+        {
+            if(isLegal(x-1,y+1,position,1))
+                moves.push_back(vector<int>(i, i+7));
+
+            if(isLegal(x+1,y+1,position,1))
+                moves.push_back(vector<int>(i, i+9));
+        }
+    }
+}
+
+void checkDirectionForMove(string position, int field, int xDirection, int yDirection)
+{
+    int x,y;
+    x=field%8;
+    y=(field-x)/8;
+
+    for(int i=0;i<8;i++)
+    {
+        if(isLegal(x+i*xDirection,y+i*yDirection,position,1))
+            moves.push_back(vector<int>(field,field+i*(8*yDirection+xDirection)));
+    }
+}
+
+void findMovesForKings(string position)
+{
+    for(int i=0;i<position.size();i++)
+    {
+        checkDirectionForMove(position,i,-1,-1);
+        checkDirectionForMove(position,i,-1,+1);
+        checkDirectionForMove(position,i,+1,-1);
+        checkDirectionForMove(position,i,+1,+1);
+    }
+}
+
 };
 
 int main()
 {
     abc xyz;
-    string position="xxxxxxxxxxBxxxxxxxxcxxxxxxxxxxxxxxxcxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    string position="xxxxxxxxxxxxxxxxxxxCxxxxxxxxbxxxxbxxxxxxxxxxbxxxxbxxxxxxxxxxxxxx";
 
-    pair<int, vector<int> > para;
-    para.second.push_back(17);
-    vector<int> a;
-    for(int i=0;i<64;i++)
-        if(position[i]=='B')
-        xyz.findCapturesForKing(position,i,a);
-
-    cout<<xyz.moves.size()<<endl;
+    xyz.findCaptures(position);
     for(int i=0;i<xyz.moves.size();i++)
     {
         for(int j=0;j<xyz.moves[i].size();j++)
@@ -272,4 +353,4 @@ int main()
 
 //    cout<<result.size()<<endl;
     return 0;
-}
+}//
