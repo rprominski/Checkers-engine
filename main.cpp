@@ -1,7 +1,10 @@
 #include<iostream>
 #include<vector>
-#include<windows.h>
+#include<unistd.h>
 using namespace std;
+class abc{
+public:
+vector< vector<int> > moves;
 
 double fieldBonus(char color, double bonus)
 {
@@ -52,115 +55,165 @@ double ratePosition(string position)
     return positionBonus(position)+materialBonus(position);
 }
 
-bool isLegal(int x, int y, string position)
+bool isLegal(int x, int y, string position, bool emptyField)
 {
     if(x<0 || y<0 || x>7 || y>7)
         return false;
 
-    if(position[x+y*8]!='x')
+    if(emptyField && position[x+y*8]!='x')
         return false;
 
     return true;
 }
 
-int findCapturesForMen(string position, int field, int depth)
+string getNewPositionForMen(string position, int xDirection, int yDirection, char color,int field)
 {
-    cout<<field<<" "<<depth<<endl;
-    for(int i=0;i<position.size();i++)
-    {
-        cout<<position[i];
-        if((i+1)%8==0)
-            cout<<endl;
-    }
-    int x,y,maxCaptures=depth;
-    char color=position[field];
+    int x,y;
+
     x=field%8;
     y=(field-x)/8;
 
     if(color=='b')
     {
-        if(isLegal(x-2,y-2,position) && (position[field-9]=='c' || position[field-9]=='C'))
-        {
-            string newPosition=position;
-            newPosition[field-9]='x';
-            newPosition[field-18]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field-18,depth+1));
-        }
+        if(!(isLegal(x+(xDirection*2),y+(yDirection*2),position,1) && (position[field+(8*yDirection+xDirection)]=='c' || position[field+(8*yDirection+xDirection)]=='C') ) )
+            return "";
 
-        if(isLegal(x+2,y-2,position) && (position[field-7]=='c' || position[field-7]=='C'))
+        else
         {
-            string newPosition=position;
-            newPosition[field-7]='x';
-            newPosition[field-14]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field-14,depth+1));
-        }
-
-        if(isLegal(x-2,y+2,position) && (position[field+7]=='c' || position[field+7]=='C'))
-        {
-            string newPosition=position;
-            newPosition[field+7]='x';
-            newPosition[field+14]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field+14,depth+1));
-        }
-
-        if(isLegal(x+2,y+2,position) && (position[field+9]=='c' || position[field+9]=='C'))
-        {
-            string newPosition=position;
-            newPosition[field+9]='x';
-            newPosition[field+18]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field+18,depth+1));
+            position[field+(8*yDirection+xDirection)]='x';
+            position[field+2*(8*yDirection+xDirection)]=position[field];
+            position[field]='x';
+            return position;
         }
     }
 
     if(color=='c')
     {
-        if(isLegal(x-2,y-2,position) && (position[field-9]=='b' || position[field-9]=='B'))
-        {
-            string newPosition=position;
-            newPosition[field-9]='x';
-            newPosition[field-18]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field-18,depth+1));
-        }
+        if(!(isLegal(x+(xDirection*2),y+(yDirection*2),position,1) && (position[field+(8*yDirection+xDirection)]=='b' || position[field+(8*yDirection+xDirection)]=='B') ) )
+            return "";
 
-        if(isLegal(x+2,y-2,position) && (position[field-7]=='b' || position[field-7]=='B'))
+        else
         {
-            string newPosition=position;
-            newPosition[field-7]='x';
-            newPosition[field-14]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field-14,depth+1));
+            position[field+(8*yDirection+xDirection)]='x';
+            position[field+2*(8*yDirection+xDirection)]=position[field];
+            position[field]='x';
+            return position;
         }
+    }
+    return "";
+}
 
-        if(isLegal(x-2,y+2,position) && (position[field+7]=='b' || position[field+7]=='B'))
+void findCapturesForMen(string position, int field, vector<int> menMoves)
+{
+    menMoves.push_back(field);
+   /* cout<<field<<endl;
+    for(int i=0;i<position.size();i++)
+    {
+        cout<<position[i];
+        if((i+1)%8==0)
+            cout<<endl;
+    } */
+    int x,y;
+    char color=position[field];
+
+    if(getNewPositionForMen(position,-1,-1,color,field)!="")
+        findCapturesForMen(getNewPositionForMen(position,-1,-1,color,field),field-18,menMoves);
+
+    if(getNewPositionForMen(position,-1,+1,color,field)!="")
+        findCapturesForMen(getNewPositionForMen(position,-1,+1,color,field),field+14,menMoves);
+
+    if(getNewPositionForMen(position,+1,-1,color,field)!="")
+        findCapturesForMen(getNewPositionForMen(position,+1,-1,color,field),field-14,menMoves);
+
+    if(getNewPositionForMen(position,+1,+1,color,field)!="")
+        findCapturesForMen(getNewPositionForMen(position,+1,+1,color,field),field+18,menMoves);
+
+    if(moves.size()==0 && menMoves.size()!=0)
+        moves.push_back(menMoves);
+    else
+    {
+        if(moves[0].size()==menMoves.size())
+            moves.push_back(menMoves);
+
+        if(moves[0].size()<menMoves.size())
         {
-            string newPosition=position;
-            newPosition[field+7]='x';
-            newPosition[field+14]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field+14,depth+1));
+            moves.clear();
+            moves.push_back(menMoves);
         }
+    }
+}
 
-        if(isLegal(x+2,y+2,position) && (position[field+9]=='b' || position[field+9]=='B'))
+void checkDirection(string position, int field, int xDirection, int yDirection, char color, vector<int> kingMoves)
+{
+    bool capture=0;
+    int captureField,x,y;
+    x=field%8;
+    y=(field-x)/8;
+
+    if(color=='B')
+    {
+        for(int i=1;i<8;i++)
         {
-            string newPosition=position;
-            newPosition[field+9]='x';
-            newPosition[field+18]=position[field];
-            newPosition[field]='x';
-            maxCaptures=max(maxCaptures,findCapturesForMen(newPosition,field+18,depth+1));
+            if(!isLegal(x+i*xDirection,y+i*yDirection,position,0))
+                break;
+
+            if(position[field+i*(yDirection*8+xDirection)]=='c' || position[field+i*(yDirection*8+xDirection)]=='C')
+            {
+                capture=1;
+                captureField=field+i*(yDirection*8+xDirection);
+                cout<<captureField<<endl;
+                i++;
+            }
+
+            if(capture)
+            {
+                if(!isLegal(x+xDirection*i,y+yDirection*i,position,1))
+                    break;
+
+                string newPosition=position;
+                newPosition[field+i*(yDirection*8+xDirection)]='B';
+                newPosition[captureField]='x';
+                newPosition[field]='x';
+                findCapturesForKing(newPosition,field+i*(yDirection*8+xDirection),kingMoves);
+            }
         }
     }
 
-    return maxCaptures;
+    if(color=='C')
+    {
+        for(int i=1;i<8;i++)
+        {
+            if(!isLegal(x+i*xDirection,y+i*yDirection,position,0))
+                break;
+
+            if(position[field+i*(yDirection*8+xDirection)]=='b' || position[field+i*(yDirection*8+xDirection)]=='B')
+            {
+                capture=1;
+                captureField=field+i*(yDirection*8+xDirection);
+                cout<<captureField<<endl;
+                i++;
+            }
+
+            if(capture)
+            {
+                if(!isLegal(x+xDirection*i,y+yDirection*i,position,1))
+                    break;
+
+                string newPosition=position;
+                newPosition[field+i*(yDirection*8+xDirection)]='C';
+                newPosition[captureField]='x';
+                newPosition[field]='x';
+                findCapturesForKing(newPosition,field+i*(yDirection*8+xDirection),kingMoves);
+            }
+        }
+    }
 }
 
-pair<int,vector<int> > findCapturesForKing(string position,int field, int depth, vector<int> moves, vector<pair<int,vector<int> > result)
+void findCapturesForKing(string position,int field, vector<int> kingMoves)
 {
-    cout<<field<<" "<<depth<<endl;
+    kingMoves.push_back(field);
+
+    cout<<field<<" "<<endl;
     for(int i=0;i<position.size();i++)
     {
         cout<<position[i];
@@ -169,322 +222,54 @@ pair<int,vector<int> > findCapturesForKing(string position,int field, int depth,
     }
 
     int x,y,captureField;
-    pair<int,vector<int> > maxCaptures=make_pair(depth,moves);
     char color=position[field];
     bool capture;
-    x=field%8;
-    y=(field-x)/8;
+    string newPosition;
 
-    if(color=='B')
+
+    checkDirection(position,field,-1,-1,color,kingMoves);
+    checkDirection(position,field,-1,+1,color,kingMoves);
+    checkDirection(position,field,+1,-1,color,kingMoves);
+    checkDirection(position,field,+1,+1,color,kingMoves);
+
+    if(moves.size()==0 && kingMoves.size()!=0)
+        moves.push_back(kingMoves);
+    else
     {
-        capture=0;
-        for(int i=1;i<8;i++)
+        if(moves[0].size()==kingMoves.size())
+            moves.push_back(kingMoves);
+
+        if(moves[0].size()<kingMoves.size())
         {
-            if(x-i<0 || y-i<0)
-                break;
-
-            if(position[field-i*9]=='c' || position[field-i*9]=='C')
-                capture=1;
-
-            if(capture)
-            {
-                if(!isLegal(x-i,y-i,position))
-                    break;
-
-                moves.push_back(field-i*9);
-            }
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x+i>7 || y-i<0)
-                break;
-
-            if(position[field-i*7]=='c' || position[field-i*7]=='C')
-                capture=1;
-
-            if(capture)
-            {
-                if(!isLegal(x+i,y-i,position))
-                    break;
-
-                moves.push_back(field-i*7);
-            }
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x-i<0 || y+i>7)
-                break;
-
-            if(position[field+i*7]=='c' || position[field+i*7]=='C')
-                capture=1;
-
-            if(capture)
-            {
-                if(!isLegal(x-i,y+i,position))
-                    break;
-
-                moves.push_back(field+i*7);
-            }
-
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x+i>7 || y+i>7)
-                break;
-
-            if(position[field+i*9]=='c' || position[field+i*9]=='C')
-                capture=1;
-
-            if(capture)
-            {
-                if(!isLegal(x+i,y+i,position))
-                    break;
-
-                moves.push_back(field+i*9);
-            }
+            moves.clear();
+            moves.push_back(kingMoves);
         }
     }
-
-    if(color=='C')
-    {
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x-i<0 || y-i<0)
-                break;
-
-            if(position[field-i*9]=='b' || position[field-i*9]=='B')
-            {
-                capture=1;
-                captureField=field-i*9;
-                i++;
-            }
-
-            if(capture)
-            {
-                if(!isLegal(x-i,y-i,position))
-                    break;
-
-                string newPosition=position;
-                pair<int, vector<int> > help;
-                vector<int> newMoves=moves;
-                newMoves.push_back(field-i*9);
-                newPosition[field-i*9]=position[field];
-                newPosition[captureField]='x';
-                newPosition[field]='x';
-                help=findCapturesForKing(newPosition,field-i*9,depth+1,newMoves,result);
-
-                if(maxCaptures.first==help.first)
-                {
-                        result.push_back(help);
-                        cout<<" tutaj0 "<<result.size()<<endl;
-                }
-
-                if(maxCaptures<help)
-                {
-                    result.clear();
-                    result.push_back(help);
-                    maxCaptures=help;
-                    cout<<" tam0 "<<result.size()<<endl;
-                }
-            }
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x+i>7 || y-i<0)
-                break;
-
-            if(position[field-i*7]=='b' || position[field-i*7]=='B')
-            {
-                capture=1;
-                captureField=field-i*7;
-                i++;
-            }
-
-            if(capture)
-            {
-                if(!isLegal(x+i,y-i,position))
-                    break;
-
-                string newPosition=position;
-                pair<int, vector<int> > help;
-                vector<int> newMoves=moves;
-                newMoves.push_back(field-i*7);
-                newPosition[field-i*7]=position[field];
-                newPosition[captureField]='x';
-                newPosition[field]='x';
-                help=findCapturesForKing(newPosition,field-i*7,depth+1,newMoves);
-
-                if(maxCaptures.first==help.first)
-                {
-                        result.push_back(help);
-                        cout<<" tutaj1 "<<result.size()<<endl;
-                }
-                if(maxCaptures<help)
-                {
-                    result.clear();
-                    result.push_back(help);
-                    maxCaptures=help;
-                    cout<<" tam1 "<<result.size()<<endl;
-                }
-            }
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x-i<0 || y+i>7)
-                break;
-
-            if(position[field+i*7]=='b' || position[field+i*7]=='B')
-            {
-                capture=1;
-                captureField=field+i*7;
-                i++;
-            }
-
-            if(capture)
-            {
-                if(!isLegal(x-i,y+i,position))
-                    break;
-
-                string newPosition=position;
-                pair<int, vector<int> > help;
-                vector<int> newMoves=moves;
-                newMoves.push_back(field+i*7);
-                newPosition[field+i*7]=position[field];
-                newPosition[captureField]='x';
-                newPosition[field]='x';
-                help=findCapturesForKing(newPosition,field+i*7,depth+1,newMoves);
-
-                if(maxCaptures.first==help.first)
-                {
-                        result.push_back(help);
-                        cout<<" tutaj2 "<<result.size()<<endl;
-                }
-
-                if(maxCaptures<help)
-                {
-                    result.clear();
-                    result.push_back(help);
-                    maxCaptures=help;
-                    cout<<" tam2 "<<result.size()<<endl;
-                }
-            }
-
-        }
-
-        capture=0;
-        for(int i=1;i<8;i++)
-        {
-            if(x+i>7 || y+i>7)
-                break;
-
-            if(position[field+i*9]=='b' || position[field+i*9]=='B')
-            {
-                captureField=field+i*9;
-                capture=1;
-                i++;
-            }
-
-            if(capture)
-            {
-                if(!isLegal(x+i,y+i,position))
-                    break;
-
-                string newPosition=position;
-                pair<int, vector<int> > help;
-                vector<int> newMoves=moves;
-                newMoves.push_back(field+i*9);
-                newPosition[field+i*9]=position[field];
-                newPosition[captureField]='x';
-                newPosition[field]='x';
-                help=findCapturesForKing(newPosition,field+i*9,depth+1,newMoves);
-
-                if(maxCaptures.first==help.first)
-                {
-                        result.push_back(help);
-                        cout<<" tutaj3 "<<result.size()<<endl;
-                }
-
-                if(maxCaptures<help)
-                {
-                    result.clear();
-                    result.push_back(help);
-                    maxCaptures=help;
-                    cout<<" tam3 "<<result.size()<<endl;
-                }
-            }
-        }
-    }
-
-    return maxCaptures;
-
 }
-
-vector<int> findCaptures(string position, char whoMoves)
-{
-    vector<int> bestMoves;
-    int bestCaptures=0;
-
-    for(int i=0;i<position.size();i++)
-    {
-        if(position[i]==whoMoves)
-        {
-            int help=findCapturesForMen(position,i,0);
-
-            if(help>bestCaptures)
-            {
-                bestMoves.clear();
-                bestMoves.push_back(i);
-                bestCaptures=help;
-            }
-
-            if(help==bestCaptures)
-                bestMoves.push_back(i);
-        }
-
-        if(position[i]==whoMoves-32)
-        {
-            int help;//=findCapturesForKing(position,i,0);
-
-            if(help>bestCaptures)
-            {
-                bestMoves.clear();
-                bestMoves.push_back(i);
-                bestCaptures=help;
-            }
-
-            if(help==bestCaptures)
-                bestMoves.push_back(i);
-        }
-    }
-
-    return bestMoves;
-}
-
+};
 
 int main()
 {
-    string position="xxxxxxxxxxxxxxxxxCxxxxxxxxxxxxxxxxxbxbxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    abc xyz;
+    string position="xxxxxxxxxxBxxxxxxxxcxxxxxxxxxxxxxxxcxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
     pair<int, vector<int> > para;
     para.second.push_back(17);
-    para=findCapturesForKing(position,17,0,para.second);
+    vector<int> a;
+    for(int i=0;i<64;i++)
+        if(position[i]=='B')
+        xyz.findCapturesForKing(position,i,a);
 
-    cout<<result.size()<<endl;
-    for(int i=0;i<result.size();i++)
+    cout<<xyz.moves.size()<<endl;
+    for(int i=0;i<xyz.moves.size();i++)
     {
-        for(int j=0;j<result[i].second.size();j++)
-            cout<<result[i].second[j]<<" ";
+        for(int j=0;j<xyz.moves[i].size();j++)
+            cout<<xyz.moves[i][j]<<" ";
+
         cout<<endl;
     }
+//    para=findCapturesForKing(position,17,0,para.second);
+
+//    cout<<result.size()<<endl;
     return 0;
 }
