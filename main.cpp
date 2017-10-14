@@ -2,6 +2,8 @@
 #include<vector>
 #include<sstream>
 #include<exception>
+#include<map>
+#include<fstream>
 #include<unistd.h>
 using namespace std;
 
@@ -9,7 +11,8 @@ void wyswietl(string position)
 {
     for(int j=0;j<position.size();j++)
     {
-        cout<<(position[j]=='x'? 'x': position[j]);
+
+        cout<<(position[j]=='x'? ' ' : position[j]);
         if((j+1)%8==0)
             cout<<endl;
     }
@@ -55,12 +58,8 @@ class PositionRater
         int bonus3[8]={19,21,26,28,35,37,42,44};
 
         for(int i=0;i<14;i++)
-        {
-
-
             result+=fieldBonus(position[bonus1[i]],0.4);
 
-        }
         for(int i=0;i<10;i++)
             result+=fieldBonus(position[bonus2[i]],0.75);
 
@@ -104,6 +103,18 @@ class PositionRater
 
             else
                 result+=fieldBonus(position[i],20);
+        }
+
+        for(int i=0;i<8;i++)
+        {
+            if(position[i]=='b')
+                result+=fieldBonus(position[i],16);
+        }
+
+        for(int i=56;i<64;i++)
+        {
+            if(position[i]=='c')
+                result+=fieldBonus(position[i],16);
         }
 
         return result;
@@ -300,7 +311,7 @@ class MoveFinder
             if((position[i]=='b' || position[i]=='c') && position[i]==color)
                 findCapturesForMen(position,i,vector<int>());
 
-            if(position[i]=='B' || position[i]=='C' && position[i]==(color-32))
+            if((position[i]=='B' || position[i]=='C') && position[i]==(color-32))
                 findCapturesForKing(position,i,vector<int>());
         }
     }
@@ -428,13 +439,18 @@ public:
         return position;
     }
 
-    int maxDepth=2;
+    int maxDepth;
 
     double findBestMove(string position, char color,int depth)
-    { cout<<color<<endl;
+    {
+
         double result=((color=='b')? -1000 : 1000);
+
         vector<vector<int> > currentMoves=findMoves(position, color);
-        //wyswietl(currentMoves); cout<<endl;
+        if(depth==0)
+        {
+            bestMove=currentMoves[0];
+        }  //wyswietl(currentMoves); cout<<endl;
         if(depth==maxDepth)
         {
             PositionRater positionRater;
@@ -445,8 +461,9 @@ public:
         {
             for(int i=0;i<currentMoves.size();i++)
             {
-                double help; cout<<color<<" ";
+                double help;
                 help=findBestMove(getPositionAfterMove(position,currentMoves[i]),changeColor(color),depth+1);
+
                 if(color=='b' || color=='B')
                 {
                     if(help>result)
@@ -470,7 +487,6 @@ public:
                 }
             }
         }
-
         return result;
     }
     vector<int> getBestMove()
@@ -489,35 +505,25 @@ vector<int> playerMoves(string moves)
         result.push_back(stoi(moves));
     }
     return result;
-
 }
 int main()
 {
     MoveFinder moveFinder;
-    PositionRater rater;
-    moveFinder.maxDepth=4;
-    int aa;
-    string position="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxcxxxxxxxxxxxxxbxxxbxxbxxxxxxx",help;
-    wyswietl(position);
-    try{
-    for(int i=0;i<2;i++)
+    moveFinder.maxDepth=7;
+
+    string position="xcxcxcxccxcxcxcxxcxcxcxcxxxxxxxxxxxxxxxxbxbxbxbxxbxbxbxbbxbxbxbx",help;
+    while(1)
     {
         cout<<moveFinder.findBestMove(position,'b',0)<<endl;
         wyswietl(moveFinder.getBestMove());
         position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
         wyswietl(position);
-
-        cout<<moveFinder.findBestMove(position,'c',0)<<endl;
-        wyswietl(moveFinder.getBestMove());
-     //   getline(cin,help);
-    //    position=moveFinder.getPositionAfterMove(position,playerMoves(help));
-    //    sleep(1);
+             //  cout<<moveFinder.findBestMove(position,'c',0,0,aaq,aaq)<<endl;
+    //    wyswietl(moveFinder.getBestMove());
+     //   position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
+    //    wyswietl(position);
+        getline(cin,help);
+        position=moveFinder.getPositionAfterMove(position,playerMoves(help));
     }
-    }catch(exception& ex)
-    {
-        cout<<ex.what()<<endl;
-    }
-
-    vector<int> tab;
-    return 0;
+   return 0;
 }
