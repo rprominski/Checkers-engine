@@ -1,13 +1,9 @@
 #include<iostream>
 #include<vector>
-#include<sstream>
-#include<exception>
-#include<map>
-#include<fstream>
-#include<unistd.h>
+#include<allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
 using namespace std;
-
-void wyswietl(string position)
+/*void wyswietl(string position)
 {
     for(int j=0;j<position.size();j++)
     {
@@ -16,7 +12,6 @@ void wyswietl(string position)
         if((j+1)%8==0)
             cout<<endl;
     }
-  //  cout<<endl<<endl;
 }
 
 void wyswietl(vector<int> position)
@@ -37,7 +32,7 @@ void wyswietl(vector<vector<int> > tab)
         cout<<endl;
     }
     cout<<endl<<endl;
-}
+} */
 
 class PositionRater
 {
@@ -128,8 +123,10 @@ public:
 };
 
 class MoveFinder
-{ public:
+{
     vector< vector<int> > moves;
+    vector<int> bestMove;
+    int black=12,white=12;
 
     bool isLegal(int x, int y, string position, bool emptyField)
     {
@@ -305,7 +302,7 @@ class MoveFinder
     }
 
     void findCaptures(string position,char color)
-    { //cout<<"kolor "<<color<<endl; wyswietl(position); cout<<endl;
+    {
         for(int i=0;i<position.size();i++)
         {
             if((position[i]=='b' || position[i]=='c') && position[i]==color)
@@ -351,10 +348,12 @@ class MoveFinder
         x=field%8;
         y=(field-x)/8;
 
-        for(int i=0;i<8;i++)
+        for(int i=1;i<8;i++)
         {
             if(isLegal(x+i*xDirection,y+i*yDirection,position,1))
                 moves.push_back(vector<int>{field,field+i*(8*yDirection+xDirection)});
+            else
+                return;
         }
     }
 
@@ -370,22 +369,6 @@ class MoveFinder
                 checkDirectionForMove(position,i,+1,+1);
             }
         }
-    }
-
-    vector<vector<int> > findMoves(string position,char color)
-    {
-      //  cout<<color<<endl;
-      //  wyswietl(position);
-        moves.clear();
-        findCaptures(position,color);
-        if(moves[0].size()==1)
-            moves.clear();
-        if(moves.size()==0)
-        {
-            findMovesForMen(position,color);
-            findMovesForKings(position,color-32);
-        }
-        return moves;
     }
 
     string deleteDirection(string position,int first, int last)
@@ -419,8 +402,9 @@ class MoveFinder
             return 'B';
     }
 
-    vector<int> bestMove;
 public:
+
+    int maxDepth;
 
     string getPositionAfterMove(string position, vector<int> move)
     {
@@ -432,14 +416,25 @@ public:
             if(position[i]=='b')
                 position[i]='B';
 
-        for(int i=58;i<64;i++)
+        for(int i=56;i<64;i++)
             if(position[i]=='c')
                 position[i]='C';
 
         return position;
     }
 
-    int maxDepth;
+    void countPawns(string position)
+    {
+        white=0;
+        black=0;
+        for(int i=0;i<position.size();i++)
+        {
+            if(position[i]=='c' || position[i]=='C')
+                black++;
+            if(position[i]=='b' || position[i]=='B')
+                white++;
+        }
+    }
 
     double findBestMove(string position, char color,int depth)
     {
@@ -449,8 +444,9 @@ public:
         vector<vector<int> > currentMoves=findMoves(position, color);
         if(depth==0)
         {
-            bestMove=currentMoves[0];
-        }  //wyswietl(currentMoves); cout<<endl;
+            if(currentMoves.size()!=0)
+                bestMove=currentMoves[0];
+        }
         if(depth==maxDepth)
         {
             PositionRater positionRater;
@@ -489,41 +485,228 @@ public:
         }
         return result;
     }
+
+    vector<vector<int> > findMoves(string position,char color)
+    {
+        moves.clear();
+        findCaptures(position,color);
+        if(moves[0].size()==1)
+            moves.clear();
+        if(moves.size()==0)
+        {
+            findMovesForMen(position,color);
+            findMovesForKings(position,color-32);
+        }
+        return moves;
+    }
+
+    bool noPawns()
+    {
+        if(white==0 || black==0)
+            return true;
+
+        return false;
+    }
+
+
     vector<int> getBestMove()
     {
         return bestMove;
     }
 };
-vector<int> playerMoves(string moves)
+
+void drawRectangle(int x,int y, char color)
 {
-    stringstream ss;
-    ss<<moves;
-    int move;
-    vector<int> result;
-    while(getline(ss,moves,' '))
-    {
-        result.push_back(stoi(moves));
-    }
-    return result;
+    if(color=='c')
+        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(0,0,0));
+
+    if(color=='b')
+        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(255,255,255));
+
+    if(color=='y')
+        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(255,255,0));
 }
+void drawMen(int x,int y,int color)
+{
+    if(color=='b')
+        al_draw_filled_circle(x,y,20,al_map_rgba(0,0,255,100));
+
+    if(color=='c')
+        al_draw_filled_circle(x,y,20,al_map_rgba(255,0,0,100));
+}
+
+void drawKing(int x,int y,int color)
+{
+    if(color=='B')
+        al_draw_filled_circle(x,y,20,al_map_rgb(122,44,200));
+
+    if(color=='C')
+        al_draw_filled_circle(x,y,20,al_map_rgb(200,122,44));
+}
+
+void drawBoard()
+{
+    int x,y;
+    for(int i=0;i<64;i++)
+    {
+        x=i%8;
+        y=(i-x)/8;
+
+        if(y%2==0)
+        {
+            if(x%2==0)
+                drawRectangle(x*100,y*100,'b');
+            else
+                drawRectangle(x*100,y*100,'c');
+        }
+
+        else
+        {
+            if(x%2==0)
+                drawRectangle(x*100,y*100,'c');
+            else
+                drawRectangle(x*100,y*100,'b');
+        }
+    }
+}
+
+void drawPosition(string position,int f)
+{
+    drawBoard();
+
+    int x,y;
+    x=f%8;
+    y=(f-x)/8;
+    if(f!=-1)
+    drawRectangle(x*100,y*100,'y');
+    for(int i=0;i<position.size();i++)
+    {
+        x=i%8;
+        y=(i-x)/8;
+
+        if(position[i]=='b' || position[i]=='c')
+            drawMen(x*100+50,y*100+50,position[i]);
+
+        if(position[i]=='B' || position[i]=='C')
+            drawKing(x*100+50,y*100+50,position[i]);
+    }
+}
+
+int getFieldFromCords(int x,int y)
+{
+    return x/100+y/100*8;
+}
+
 int main()
 {
+    vector<int> clickMoves;
     MoveFinder moveFinder;
-    moveFinder.maxDepth=7;
+    string position="xcxcxcxccxcxcxcxxcxcxcxcxxxxxxxxxxxxxxxxbxbxbxbxxbxbxbxbbxbxbxbx";
+    char colorToMove,playerColor;
+    int depth;
 
-    string position="xcxcxcxccxcxcxcxxcxcxcxcxxxxxxxxxxxxxxxxbxbxbxbxxbxbxbxbbxbxbxbx",help;
+    cout<<"Podaj glebokosc"<<endl;
+    cin>>depth;
+    moveFinder.maxDepth=depth;
+
+    cout<<"Biale czy czarne? [b,c]"<<endl;
+    cin>>playerColor;
+
+    bool whoMoves;
+
+    if(playerColor=='c')
+    {
+        colorToMove='b';
+        whoMoves=1;
+    }
+    else
+    {
+        colorToMove='c';
+        whoMoves=0;
+    }
+
+    al_init();
+    al_install_keyboard();
+    al_install_mouse();
+    al_init_primitives_addon();
+    ALLEGRO_KEYBOARD_STATE keyboard;
+    ALLEGRO_DISPLAY *window=al_create_display(800,800);
+    ALLEGRO_EVENT_QUEUE *event_queue = NULL;
+    event_queue = al_create_event_queue();
+    al_register_event_source(event_queue, al_get_mouse_event_source());
+
     while(1)
     {
-        cout<<moveFinder.findBestMove(position,'b',0)<<endl;
-        wyswietl(moveFinder.getBestMove());
-        position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
-        wyswietl(position);
-             //  cout<<moveFinder.findBestMove(position,'c',0,0,aaq,aaq)<<endl;
-    //    wyswietl(moveFinder.getBestMove());
-     //   position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
-    //    wyswietl(position);
-        getline(cin,help);
-        position=moveFinder.getPositionAfterMove(position,playerMoves(help));
+        int fieldToColor;
+
+        if(whoMoves)
+        {
+            moveFinder.findBestMove(position,colorToMove,0);
+            position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
+            whoMoves=0;
+            drawPosition(position,fieldToColor);
+            al_flip_display();
+        }
+
+        ALLEGRO_EVENT ev;
+        al_wait_for_event(event_queue, &ev);
+
+        vector<vector<int> > mvs=moveFinder.findMoves(position,playerColor);
+
+        if(mvs.size()==0)
+            break;
+
+        if(ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP)
+        {
+            if(ev.mouse.button==1)
+            {
+                fieldToColor=getFieldFromCords(ev.mouse.x,ev.mouse.y);
+                clickMoves.push_back(fieldToColor);
+                bool clear=1;
+
+                for(int it=0;it<mvs.size();it++)
+                {
+                    if(mvs[it]==clickMoves)
+                    {
+                        position=moveFinder.getPositionAfterMove(position,clickMoves);
+
+                        whoMoves=1;
+                        clickMoves.clear();
+                        fieldToColor=-1;
+                    }
+
+                    bool equal=1;
+                    for(int j=0;j<clickMoves.size();j++)
+                    {
+                        if(clickMoves[j]!=mvs[it][j])
+                        {
+                            equal=0;
+                            break;
+                        }
+                    }
+                    if(equal)
+                        clear=0;
+                }
+
+                if(clear)
+                    clickMoves.clear();
+            }
+
+            if(ev.mouse.button==2)
+            {
+                clickMoves.clear();
+                fieldToColor=-1;
+            }
+
+            drawPosition(position,fieldToColor);
+            al_flip_display();
+        }
+        moveFinder.countPawns(position);
+        if(moveFinder.noPawns())
+            break;
     }
-   return 0;
+    sleep(5);
+
+    al_destroy_display(window);
+    return 0;
 }
