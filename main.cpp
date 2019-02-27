@@ -4,114 +4,9 @@
 #include <allegro5/allegro_primitives.h>
 #include "include/PositionRater.h"
 #include "include/MoveFinder.h"
+#include "include/PositionDrawer.h"
+
 using namespace std;
-/*void wyswietl(string position)
-{
-    for(int j=0;j<position.size();j++)
-    {
-
-        cout<<(position[j]=='x'? ' ' : position[j]);
-        if((j+1)%8==0)
-            cout<<endl;
-    }
-}
-
-void wyswietl(vector<int> position)
-{
-    for(int j=0;j<position.size();j++)
-    {
-        cout<<position[j]<<" ";
-    }
-    cout<<endl<<endl;
-}
-
-void wyswietl(vector<vector<int> > tab)
-{
-    for(int j=0;j<tab.size();j++)
-    {
-        for(int k=0;k<tab[j].size();k++)
-            cout<<tab[j][k]<<" ";
-        cout<<endl;
-    }
-    cout<<endl<<endl;
-} */
-
-void drawRectangle(int x,int y, char color)
-{
-    if(color=='c')
-        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(0,0,0));
-
-    if(color=='b')
-        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(255,255,255));
-
-    if(color=='y')
-        al_draw_filled_rectangle(x,y,x+100,y+100,al_map_rgb(255,255,0));
-}
-void drawMen(int x,int y,int color)
-{
-    if(color=='b')
-        al_draw_filled_circle(x,y,20,al_map_rgba(0,0,255,100));
-
-    if(color=='c')
-        al_draw_filled_circle(x,y,20,al_map_rgba(255,0,0,100));
-}
-
-void drawKing(int x,int y,int color)
-{
-    if(color=='B')
-        al_draw_filled_circle(x,y,20,al_map_rgb(122,44,200));
-
-    if(color=='C')
-        al_draw_filled_circle(x,y,20,al_map_rgb(200,122,44));
-}
-
-void drawBoard()
-{
-    int x,y;
-    for(int i=0;i<64;i++)
-    {
-        x=i%8;
-        y=(i-x)/8;
-
-        if(y%2==0)
-        {
-            if(x%2==0)
-                drawRectangle(x*100,y*100,'b');
-            else
-                drawRectangle(x*100,y*100,'c');
-        }
-
-        else
-        {
-            if(x%2==0)
-                drawRectangle(x*100,y*100,'c');
-            else
-                drawRectangle(x*100,y*100,'b');
-        }
-    }
-}
-
-void drawPosition(string position,int f)
-{
-    drawBoard();
-
-    int x,y;
-    x=f%8;
-    y=(f-x)/8;
-    if(f!=-1)
-    drawRectangle(x*100,y*100,'y');
-    for(int i=0;i<position.size();i++)
-    {
-        x=i%8;
-        y=(i-x)/8;
-
-        if(position[i]=='b' || position[i]=='c')
-            drawMen(x*100+50,y*100+50,position[i]);
-
-        if(position[i]=='B' || position[i]=='C')
-            drawKing(x*100+50,y*100+50,position[i]);
-    }
-}
 
 int getFieldFromCords(int x,int y)
 {
@@ -122,13 +17,14 @@ int main()
 {
     vector<int> clickMoves;
     MoveFinder moveFinder;
+    PositionDrawer positionDrawer;
     string position="xcxcxcxccxcxcxcxxcxcxcxcxxxxxxxxxxxxxxxxbxbxbxbxxbxbxbxbbxbxbxbx";
     char colorToMove,playerColor;
     int depth;
 
     cout<<"Podaj glebokosc"<<endl;
     cin>>depth;
-    moveFinder.maxDepth=depth;
+    moveFinder.setMaxDepth(depth);
 
     cout<<"Biale czy czarne? [b,c]"<<endl;
     cin>>playerColor;
@@ -165,7 +61,7 @@ int main()
             moveFinder.findBestMove(position,colorToMove,0);
             position=moveFinder.getPositionAfterMove(position,moveFinder.getBestMove());
             whoMoves=0;
-            drawPosition(position,fieldToColor);
+            positionDrawer.drawPosition(position,fieldToColor);
             al_flip_display();
         }
 
@@ -219,7 +115,7 @@ int main()
                 fieldToColor=-1;
             }
 
-            drawPosition(position,fieldToColor);
+            positionDrawer.drawPosition(position,fieldToColor);
             al_flip_display();
         }
         moveFinder.countPawns(position);
