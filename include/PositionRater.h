@@ -7,8 +7,7 @@
 
 #include <string>
 
-class PositionRater
-{
+class PositionRater {
     double fieldBonus(char color, double bonus);
 
     double positionBonus(std::string position);
@@ -19,4 +18,5 @@ public:
     double ratePosition(std::string position);
 
 };
+
 #endif //HECKERS_ENGINE_POSITIONRATER_H

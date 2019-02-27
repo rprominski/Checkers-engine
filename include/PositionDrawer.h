@@ -10,11 +10,11 @@
 class PositionDrawer {
     void drawBoard();
 
-    void drawKing(int x,int y,int color);
+    void drawKing(int x, int y, int color);
 
-    void drawMen(int x,int y,int color);
+    void drawMen(int x, int y, int color);
 
-    void drawRectangle(int x,int y, char color);
+    void drawRectangle(int x, int y, char color);
 
 public:
     void drawPosition(std::string position, int f);
