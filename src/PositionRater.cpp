@@ -21,23 +21,23 @@ double PositionRater::positionBonus(std::string position) {
     int bonus2[10] = {10, 12, 14, 17, 30, 33, 46, 49, 51, 53};
     int bonus3[8] = {19, 21, 26, 28, 35, 37, 42, 44};
 
-    for (int i = 0; i < 14; i++) {
-        result += fieldBonus(position[bonus1[i]], 0.4);
+    for (int i : bonus1) {
+        result += fieldBonus(position[i], 0.4);
     }
 
-    for (int i = 0; i < 10; i++) {
-        result += fieldBonus(position[bonus2[i]], 0.75);
+    for (int i : bonus2) {
+        result += fieldBonus(position[i], 0.75);
+    }
+
+    for (int i : bonus3) {
+        result += fieldBonus(position[i], 1);
     }
 
     for (int i = 0; i < 8; i++) {
-        result += fieldBonus(position[bonus3[i]], 1);
+        result += ((position[i] == 'c') ? -0.1 : (position[i] == 'b' ? 0.1 : 0));
     }
 
-    for (int i = 0; i < 8; i++) {
-        result += ((position[i] == 'c') ? -0.1 : (position[i] == 'b' ? 0 : 0));
-    }
-
-    for (int i = 8; i < 16; i++ {
+    for (int i = 8; i < 16; i++) {
         result += ((position[i] == 'c') ? -0.1 : (position[i] == 'b' ? 0.5 : 0));
     }
 
