@@ -5,7 +5,7 @@
 #include "../include/PositionRater.h"
 #include "../include/MoveFinder.h"
 #include "../include/PositionDrawer.h"
-
+#include "../include/Color.h"
 using namespace std;
 
 int getFieldFromCords(int x, int y) {
@@ -28,7 +28,6 @@ int main() {
     cin >> playerColor;
 
     bool whoMoves;
-
     if (playerColor == 'c') {
         colorToMove = 'b';
         whoMoves = 1;
