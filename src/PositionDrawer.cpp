@@ -4,80 +4,71 @@
 
 #include <allegro5/color.h>
 #include <allegro5/allegro_primitives.h>
+#include <iostream>
 #include "../include/PositionDrawer.h"
+#include "../include/Color.h"
 
-void PositionDrawer::drawPosition(std::string position, int f) {
-    drawBoard();
-
-    int x = f % 8;
-    int y = (f - x) / 8;
-
-    if (f != -1) {
-        drawRectangle(x * 100, y * 100, 'y');
-    }
-    for (int i = 0; i < position.size(); i++) {
-        x = i % 8;
-        y = (i - x) / 8;
-
-        if (position[i] == 'b' || position[i] == 'c') {
-            drawMen(x * 100 + 50, y * 100 + 50, position[i]);
-        }
-
-        if (position[i] == 'B' || position[i] == 'C') {
-            drawKing(x * 100 + 50, y * 100 + 50, position[i]);
+void PositionDrawer::drawPosition(Board board) {
+    for (auto i : board.getFields()) {
+        drawRectangle(i.getX(), i.getY(), i.getColor());
+        if (i.getFigure().getType() != Figure::NONE) {
+            drawFigure(i);
         }
     }
+    al_flip_display();
 }
 
-void PositionDrawer::drawBoard() {
-    int x, y;
+void PositionDrawer::drawFigure(Field field) {
+    int x = field.getX() * fieldSize + fieldSize / 2;
+    int y = field.getY() * fieldSize + fieldSize / 2;
+    Color color = field.getFigure().getColor();
 
-    for (int i = 0; i < 64; i++) {
-        x = i % 8;
-        y = (i - x) / 8;
-
-        if (y % 2 == 0) {
-            if (x % 2 == 0) {
-                drawRectangle(x * 100, y * 100, 'b');
-            } else {
-                drawRectangle(x * 100, y * 100, 'c');
-            }
-        } else {
-            if (x % 2 == 0) {
-                drawRectangle(x * 100, y * 100, 'c');
-            } else {
-                drawRectangle(x * 100, y * 100, 'b');
-            }
+    if (field.getFigure().getType() == Figure::KING) {
+        if (color == WHITE) {
+            al_draw_filled_circle(x, y, figureSize, al_map_rgb(122, 44, 200));
+        }
+        if (color == BLACK) {
+            al_draw_filled_circle(x, y, figureSize, al_map_rgb(200, 122, 44));
+        }
+    } else {
+        if (color == WHITE) {
+            al_draw_filled_circle(x, y, figureSize, al_map_rgb(0, 0, 255));
+        }
+        if (color == BLACK) {
+            al_draw_filled_circle(x, y, figureSize, al_map_rgb(255, 0, 0));
         }
     }
 }
 
-void PositionDrawer::drawKing(int x, int y, int color) {
-    if (color == 'B') {
-        al_draw_filled_circle(x, y, 20, al_map_rgb(122, 44, 200));
+void PositionDrawer::drawRectangle(int x, int y, Color color) {
+    x *= fieldSize;
+    y *= fieldSize;
+
+    if (color == BLACK) {
+        al_draw_filled_rectangle(x, y, x + fieldSize, y + fieldSize, al_map_rgb(0, 0, 0));
     }
-    if (color == 'C') {
-        al_draw_filled_circle(x, y, 20, al_map_rgb(200, 122, 44));
+    if (color == WHITE) {
+        al_draw_filled_rectangle(x, y, x + fieldSize, y + fieldSize, al_map_rgb(255, 255, 255));
+    }
+    if (color == YELLOW) {
+        al_draw_filled_rectangle(x, y, x + fieldSize, y + fieldSize, al_map_rgb(255, 255, 0));
     }
 }
 
-void PositionDrawer::drawMen(int x, int y, int color) {
-    if (color == 'b') {
-        al_draw_filled_circle(x, y, 20, al_map_rgba(0, 0, 255, 100));
-    }
-    if (color == 'c') {
-        al_draw_filled_circle(x, y, 20, al_map_rgba(255, 0, 0, 100));
-    }
+PositionDrawer::PositionDrawer(int width) {
+    figureSize = fieldSize / 4;
+    al_init();
+    al_install_keyboard();
+    al_install_mouse();
+    al_init_primitives_addon();
+    ALLEGRO_KEYBOARD_STATE keyboard;
+    window = al_create_display(width * fieldSize, width * fieldSize);
 }
 
-void PositionDrawer::drawRectangle(int x, int y, char color) {
-    if (color == 'c') {
-        al_draw_filled_rectangle(x, y, x + 100, y + 100, al_map_rgb(0, 0, 0));
-    }
-    if (color == 'b') {
-        al_draw_filled_rectangle(x, y, x + 100, y + 100, al_map_rgb(255, 255, 255));
-    }
-    if (color == 'y') {
-        al_draw_filled_rectangle(x, y, x + 100, y + 100, al_map_rgb(255, 255, 0));
-    }
+PositionDrawer::~PositionDrawer() {
+    al_destroy_display(window);
+}
+
+ALLEGRO_DISPLAY *PositionDrawer::getWindow() const {
+    return window;
 }

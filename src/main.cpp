@@ -6,11 +6,10 @@
 #include "../include/MoveFinder.h"
 #include "../include/PositionDrawer.h"
 #include "../include/Color.h"
+#include "../include/EventListener.h"
+
 using namespace std;
 
-int getFieldFromCords(int x, int y) {
-    return x / 100 + y / 100 * 8;
-}
 
 int main() {
     vector<int> clickMoves;
@@ -20,7 +19,7 @@ int main() {
     char colorToMove, playerColor;
     int depth;
 
-    cout << "Podaj glebokosc" << endl;
+    /*cout << "Podaj glebokosc" << endl;
     cin >> depth;
     moveFinder.setMaxDepth(depth);
 
@@ -35,17 +34,15 @@ int main() {
         colorToMove = 'c';
         whoMoves = 0;
     }
-
-    al_init();
-    al_install_keyboard();
-    al_install_mouse();
-    al_init_primitives_addon();
-    ALLEGRO_KEYBOARD_STATE keyboard;
-    ALLEGRO_DISPLAY *window = al_create_display(800, 800);
-    ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-    event_queue = al_create_event_queue();
-    al_register_event_source(event_queue, al_get_mouse_event_source());
-
+    */
+    Board board;
+    positionDrawer.drawPosition(board);
+    EventListener eventListener(positionDrawer.getWindow());
+    while(!eventListener.isEnd()) {
+        eventListener.listen();
+        positionDrawer.drawPosition(board);
+    }
+    /*
     while (1) {
         int fieldToColor;
 
@@ -57,8 +54,7 @@ int main() {
             al_flip_display();
         }
 
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(event_queue, &ev);
+
 
         vector<vector<int> > mvs = moveFinder.findMoves(position, playerColor);
 
@@ -108,7 +104,7 @@ int main() {
             break;
     }
     sleep(5);
-
-    al_destroy_display(window);
+    */
+   //
     return 0;
 }

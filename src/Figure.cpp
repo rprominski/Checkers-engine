@@ -5,10 +5,11 @@
 #include "../include/Figure.h"
 
 Figure::Figure() {
+    color = NONE;
     type = NONE;
 }
 
-Color Figure::getColor() {
+Color Figure::getColor() const {
     return color;
 }
 
@@ -16,7 +17,7 @@ void Figure::setColor(Color color) {
     Figure::color = color;
 }
 
-Figure::Type Figure::getType() {
+Figure::Type Figure::getType() const {
     return type;
 }
 

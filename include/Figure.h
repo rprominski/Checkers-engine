@@ -21,11 +21,11 @@ private:
     Type type;
 
 public:
-    Color getColor();
+    Color getColor() const;
 
     void setColor(Color color);
 
-    Type getType();
+    Type getType() const;
 
     void setType(Type type);
 

@@ -14,6 +14,14 @@ class Board {
 
 public:
     Board();
+
+    int getSize() const;
+
+    void setSize(int size);
+
+    const std::vector<Field> &getFields() const;
+
+    void setFields(const std::vector<Field> &fields);
 };
 
 

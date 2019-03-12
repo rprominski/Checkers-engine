@@ -6,18 +6,27 @@
 #define HECKERS_ENGINE_POSITIONDRAWER_H
 
 #include <string>
+#include "Color.h"
+#include "Board.h"
+#include <allegro5/allegro.h>
 
 class PositionDrawer {
-    void drawBoard();
+    ALLEGRO_DISPLAY *window;
+    int fieldSize = 100;
+    int figureSize;
+    int width;
+    void drawFigure(Field field);
 
-    void drawKing(int x, int y, int color);
-
-    void drawMen(int x, int y, int color);
-
-    void drawRectangle(int x, int y, char color);
+    void drawRectangle(int x, int y, Color color);
 
 public:
-    void drawPosition(std::string position, int f);
+    void drawPosition(Board board);
+
+    PositionDrawer(int width = 8);
+
+    ALLEGRO_DISPLAY *getWindow() const;
+
+    virtual ~PositionDrawer();
 
 };
 
